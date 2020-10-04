@@ -3,6 +3,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useContext,
 } from 'react';
 import {
   DialogActions,
@@ -27,6 +28,10 @@ import { retry } from 'rxjs/operators';
 import { ApiError } from '../../api/types';
 import { logEntry } from '../../util/logger';
 import SelectSourceFolder from './SelectSourceFolder';
+import fs from 'fs';
+import path from 'path';
+import MapsContext from './MapsContext';
+import parseScenario from '../../util/parseScenario';
 
 const useStyles = makeStyles((theme) => ({
   contentRoot: {
@@ -101,6 +106,7 @@ const validate = ({
 };
 
 const MapUpload: FunctionComponent<Props> = () => {
+  const { sourceFolder } = useContext(MapsContext);
   const classes = useStyles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -231,6 +237,26 @@ const MapUpload: FunctionComponent<Props> = () => {
     updateMap,
     version,
   ]);
+
+  const floep = useCallback(() => {
+    if (!sourceFolder) {
+      return;
+    }
+    fs.readdir(sourceFolder, (statErr, files) => {
+      if (statErr) {
+        console.error(statErr);
+        return;
+      }
+      const scenarioFile = files.find((f) =>
+        f.toLowerCase().endsWith('_scenario.lua')
+      );
+      if (!scenarioFile) {
+        console.error('no scenario file found');
+        return;
+      }
+      parseScenario(path.join(sourceFolder, scenarioFile));
+    });
+  }, [sourceFolder]);
 
   return (
     <Box display="flex" flex="1" flexDirection="row">
@@ -455,6 +481,14 @@ const MapUpload: FunctionComponent<Props> = () => {
               </Button>
             ) : (
               <>
+                <Button
+                  disabled={uploading}
+                  onClick={() => {
+                    floep();
+                  }}
+                >
+                  SCENARIO PARSE
+                </Button>
                 <Button
                   variant="contained"
                   color="secondary"

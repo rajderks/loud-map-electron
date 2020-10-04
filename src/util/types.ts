@@ -21,3 +21,11 @@ export interface PatchNote {
   name: string;
   published_at: Moment;
 }
+
+export interface ScenarioLUA {
+  author: string;
+  name: string;
+  description: string;
+  map_version: string;
+  size: number;
+}

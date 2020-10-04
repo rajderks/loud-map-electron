@@ -6,9 +6,8 @@ import MapUpload from './MapUpload';
 import SelectSourceFolder from './SelectSourceFolder';
 
 const Maps = () => {
-  const { previewImage, sourceFolder } = useContext(MapsContext);
-  console.warn(sourceFolder);
-  console.warn(previewImage);
+  const { sourceFolder } = useContext(MapsContext);
+
   return (
     <Box display="flex" flex="1" flexDirection="row">
       {(sourceFolder?.length ?? 0) > 0 ? (
