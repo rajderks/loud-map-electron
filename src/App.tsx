@@ -8,9 +8,6 @@ import {
 } from '@material-ui/core';
 import MapsLoadable from './containers/maps/loadable';
 import Menu from './containers/menu';
-import MainLoadable from './containers/main/loadable';
-import MainContextProvider from './containers/main/MainContextProvider';
-import PatchNotes from './containers/patchnotes';
 import MapsContextProvider from './containers/maps/MapsContextProvider';
 
 const theme = createMuiTheme({

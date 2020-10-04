@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import parseLUA from '../../util/parseLUA';
+import parseLUA from './parseLUA';
 import Jimp from 'jimp';
 // import { stringify } from 'querystring';
 

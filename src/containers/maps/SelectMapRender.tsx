@@ -7,13 +7,10 @@ import React, {
 import { Button } from '@material-ui/core';
 import MapsContext from './MapsContext';
 import commandMapPreview from './util.preview';
-import path from 'path';
 import fs from 'fs';
 import Jimp from 'jimp';
 
-interface Props {}
-
-const SelectMapRender: FunctionComponent<Props> = ({}) => {
+const SelectMapRender: FunctionComponent = () => {
   const { sourceFolder, previewImage, setPreviewImage } = useContext(
     MapsContext
   );
@@ -22,6 +19,7 @@ const SelectMapRender: FunctionComponent<Props> = ({}) => {
     if (previewImage) {
       try {
         const buffer = fs.readFileSync(previewImage);
+        // @ts-ignore
         Jimp.read(buffer.buffer)
           .then((x) => x.getBase64Async(x.getMIME()))
           .then((x) => {

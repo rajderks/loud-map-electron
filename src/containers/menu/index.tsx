@@ -3,14 +3,13 @@ import { remote } from 'electron';
 import TitleBar from 'frameless-titlebar';
 import { MenuItem } from 'frameless-titlebar/dist/title-bar/typings';
 import { version } from '../../../package.json';
-import rungame from '../../util/rungame';
 
 const currentWindow = remote.getCurrentWindow();
 
 const Menu: FunctionComponent = () => {
   const buttonCallback = useCallback<(menu: MenuItem) => void>((menu) => {
     if (menu.id === 'game-run') {
-      rungame();
+      /* stub */
     }
   }, []);
 
@@ -33,7 +32,7 @@ const Menu: FunctionComponent = () => {
             ],
           },
         ]}
-        title={`LOUD Supreme Commander Forged Alliance Updater & Game Launcher -- Version ${version}`}
+        title={`LOUD Map thingy -- Version ${version}`}
         onClose={() => remote.app.quit()}
         onMinimize={() => currentWindow.minimize()}
         onMaximize={() => currentWindow.setSize(960, 644)}

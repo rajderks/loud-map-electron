@@ -1,5 +1,5 @@
-import { Box, Button } from '@material-ui/core';
-import React, { FunctionComponent, useContext } from 'react';
+import { Box } from '@material-ui/core';
+import React, { useContext } from 'react';
 import MapsPreview from './MapsPreview';
 import MapsContext from './MapsContext';
 import MapUpload from './MapUpload';

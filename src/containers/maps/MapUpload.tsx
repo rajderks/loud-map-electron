@@ -53,11 +53,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onAddedMap: () => void;
-}
+interface Props {}
 
 const validate = ({
   file,
@@ -104,7 +100,7 @@ const validate = ({
   );
 };
 
-const MapUpload: FunctionComponent<Props> = ({ open, setOpen, onAddedMap }) => {
+const MapUpload: FunctionComponent<Props> = () => {
   const classes = useStyles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -193,7 +189,7 @@ const MapUpload: FunctionComponent<Props> = ({ open, setOpen, onAddedMap }) => {
       .subscribe(
         (n) => {
           setSuccessToken(n.response.token);
-          onAddedMap();
+          // onAddedMap();
         },
         (e) => {
           setUploading(false);
@@ -453,7 +449,6 @@ const MapUpload: FunctionComponent<Props> = ({ open, setOpen, onAddedMap }) => {
                 disabled={uploading}
                 onClick={() => {
                   reset();
-                  setOpen(false);
                 }}
               >
                 CLOSE
@@ -472,7 +467,6 @@ const MapUpload: FunctionComponent<Props> = ({ open, setOpen, onAddedMap }) => {
                   disabled={uploading}
                   onClick={() => {
                     reset();
-                    setOpen(false);
                   }}
                 >
                   CANCEL
