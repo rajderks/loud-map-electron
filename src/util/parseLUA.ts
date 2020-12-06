@@ -45,7 +45,7 @@ var replaces: Replace[] = [
   {
     Regexp: '=',
     Replacer: ':',
-  },
+	},
   // {
   //   Regexp: /^\n*"Scenario":/gi,
   //   Replacer: 'var Scenario=',
@@ -58,6 +58,11 @@ var replaces: Replace[] = [
     Regexp: /\[|\]/gi,
     Replacer: '',
   },
+	{
+		// "CombatZone_00",... destroy arrays tables.... :/
+		Regexp: /^"[^"]*?",??$/gim,
+		Replacer: ' '
+	},
 ];
 
 const parseLUA = (src: string, dst?: string) => {

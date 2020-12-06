@@ -61,12 +61,11 @@ const commandMapPreview = async (
     );
   }
 
+	// debug code
+	// parseLUA(paths.save, path.join(dir, 'floep.json'));
   const saveJSON = JSON.parse(
     parseLUA(paths.save)!
-    // parseLUA(paths.save, path.join(__dirname, 'floep.json'))!
   );
-
-  //
 
   const markers: Record<string, any> =
     saveJSON.MasterChain['_MASTERCHAIN_'].Markers;
