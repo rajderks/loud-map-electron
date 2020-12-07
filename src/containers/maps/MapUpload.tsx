@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useContext,
-	useRef,
+  useRef,
 } from 'react';
 import {
   DialogActions,
@@ -37,7 +37,6 @@ import { ScenarioLUA } from '../../util/types';
 import { remote } from 'electron';
 import { archiveDirectory } from '../../util/archive';
 
-
 const useStyles = makeStyles((theme) => ({
   contentRoot: {
     display: 'flex',
@@ -48,8 +47,8 @@ const useStyles = makeStyles((theme) => ({
   },
   sizeIcon: {
     position: 'absolute',
-		bottom: 6,
-		color: theme.palette.text.primary
+    bottom: 6,
+    color: theme.palette.text.primary,
   },
   sizeSelect: {
     marginLeft: 32,
@@ -78,7 +77,7 @@ const validate = ({
   author,
   version,
 }: {
-	image: string | null;
+  image: string | null;
   name: string;
   description: string;
   players: string;
@@ -126,8 +125,8 @@ const MapUpload: FunctionComponent<Props> = () => {
   const [updateMap, setUpdateMap] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [disableAddButton, setDisableAddButton] = useState<boolean>(false);
-	const [successToken, setSuccessToken] = useState<string | null>(null);
-	const [, setScenarioLUA] = useState<ScenarioLUA | null>(null);
+  const [successToken, setSuccessToken] = useState<string | null>(null);
+  const [, setScenarioLUA] = useState<ScenarioLUA | null>(null);
 
   const reset = useCallback(() => {
     setName('');
@@ -149,92 +148,103 @@ const MapUpload: FunctionComponent<Props> = () => {
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-		
     e.preventDefault();
-		setError(null);
-		
-		if(!sourceFolder) {
-			return;
-		}
+    setError(null);
 
-		const formData = new FormData();
-		const zipName =  `${name}-${version}.scd`;
-		const tempPath = path.join(remote.app.getPath("temp"), 'LOUD-MAP', zipName);
+    if (!sourceFolder) {
+      return;
+    }
 
-		try {
-			fs.mkdirSync(path.dirname(tempPath));
-			fs.unlinkSync(tempPath);
-		} catch(e) {
-			console.log(e);
-		}
+    const formData = new FormData();
+    const zipName = `${path
+      .normalize(sourceFolder)
+      .split(path.sep)
+      .pop()!}.scd`;
+    const tempPath = path.join(remote.app.getPath('temp'), 'LOUD-MAP', zipName);
 
-		archiveDirectory(sourceFolder, tempPath).then((result) => {
-			if (
-				!validate({
-					image: previewImage,
-					name,
-					players,
-					description,
-					adminToken,
-					mapToken,
-					updateMap,
-					// officialMap,
-					author,
-					version,
-				})
-			) {
-				return;
-			}
+    try {
+      fs.mkdirSync(path.dirname(tempPath));
+      fs.unlinkSync(tempPath);
+    } catch (e) {
+      console.log(e);
+    }
 
-			setUploading(true);
+    archiveDirectory(sourceFolder, tempPath)
+      .then((result) => {
+        if (
+          !validate({
+            image: previewImage,
+            name,
+            players,
+            description,
+            adminToken,
+            mapToken,
+            updateMap,
+            // officialMap,
+            author,
+            version,
+          })
+        ) {
+          return;
+        }
 
-			const fileBuffer = Buffer.from(fs.readFileSync(result.filePath));
-			const fileFile:File = new File([fileBuffer], path.basename(result.filePath), { type: 'application/scd'});
+        setUploading(true);
 
-			const previewBuffer = Buffer.from(fs.readFileSync(previewImage!));
-			const previewFile:File = new File([previewBuffer], path.basename(previewImage!), { type: 'image/jpg'});
+        const fileBuffer = Buffer.from(fs.readFileSync(result.filePath));
+        const fileFile: File = new File(
+          [fileBuffer],
+          path.basename(result.filePath),
+          { type: 'application/scd' }
+        );
 
-			formData.append('author', author);
-			formData.append('file', fileFile);
-			formData.append('image', previewFile);
-			formData.append('name', name);
-			formData.append('description', description);
-			formData.append('players', players);
-			formData.append('version', version);
-			formData.append('size', String(size));
-			// if (officialMap) {
-			formData.append('official', 'true');
-			formData.append('adminToken', adminToken);
-			// }
-			if (updateMap) {
-				formData.append('mapToken', mapToken);
-			}
-	
-			api
-				.post('maps', formData)
-				.pipe(retry(0))
-				.subscribe(
-					(n) => {
-						setSuccessToken(n.response.token);
-					},
-					(e) => {
-						setUploading(false);
-						setError((e.response as ApiError)?.message ?? 'unkown error');
-						logEntry((e.response as ApiError)?.message, 'error', ['log']);
-					},
-					() => {
-						setUploading(false);
-						try {
-							fs.unlinkSync(result.filePath);
-						} catch(e) {
-							console.log(e);
-						}
-					}
-				);
-		}).catch(e => {
-			console.error(e);
-		});
-		
+        const previewBuffer = Buffer.from(fs.readFileSync(previewImage!));
+        const previewFile: File = new File(
+          [previewBuffer],
+          path.basename(previewImage!),
+          { type: 'image/jpg' }
+        );
+
+        formData.append('author', author);
+        formData.append('file', fileFile);
+        formData.append('image', previewFile);
+        formData.append('name', name);
+        formData.append('description', description);
+        formData.append('players', players);
+        formData.append('version', version);
+        formData.append('size', String(size));
+        // if (officialMap) {
+        formData.append('official', 'true');
+        formData.append('adminToken', adminToken);
+        // }
+        if (updateMap) {
+          formData.append('mapToken', mapToken);
+        }
+
+        api
+          .post('maps', formData)
+          .pipe(retry(0))
+          .subscribe(
+            (n) => {
+              setSuccessToken(n.response.token);
+            },
+            (e) => {
+              setUploading(false);
+              setError((e.response as ApiError)?.message ?? 'unkown error');
+              logEntry((e.response as ApiError)?.message, 'error', ['log']);
+            },
+            () => {
+              setUploading(false);
+              try {
+                fs.unlinkSync(result.filePath);
+              } catch (e) {
+                console.log(e);
+              }
+            }
+          );
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   };
 
   useEffect(() => {
@@ -252,25 +262,36 @@ const MapUpload: FunctionComponent<Props> = () => {
         version,
       })
     );
-  }, [adminToken, author, description, file, mapToken, name, players, previewImage, updateMap, version]);
+  }, [
+    adminToken,
+    author,
+    description,
+    file,
+    mapToken,
+    name,
+    players,
+    previewImage,
+    updateMap,
+    version,
+  ]);
 
-	const setScenarioInfoFromLUA = (info: ScenarioLUA) => {
-		if(info.description && !description?.length) {
-			setDescription(info.description);
-		}
-		if(info.map_version && !version?.length) {
-			setVersion(info.map_version);
-		}
-		if(info.name && !name?.length) {
-			setName(info.name);
-		}
-		if(info.size && size === 0) {
-			setSize(info.size);
-		}
-		if(info.players && !players?.length) {
-			setPlayers(String(info.players));
-		}
-	}
+  const setScenarioInfoFromLUA = (info: ScenarioLUA) => {
+    if (info.description && !description?.length) {
+      setDescription(info.description);
+    }
+    if (info.map_version && !version?.length) {
+      setVersion(info.map_version);
+    }
+    if (info.name && !name?.length) {
+      setName(info.name);
+    }
+    if (info.size && size === 0) {
+      setSize(info.size);
+    }
+    if (info.players && !players?.length) {
+      setPlayers(String(info.players));
+    }
+  };
 
   const loadScenarioInfo = () => {
     if (!sourceFolder) {
@@ -287,31 +308,31 @@ const MapUpload: FunctionComponent<Props> = () => {
       if (!scenarioFile) {
         console.error('no scenario file found');
         return;
-			}
-			try {
-				const scenarioInfo = parseScenario(path.join(sourceFolder, scenarioFile));
-				if(scenarioInfo) {
-					setScenarioLUA(scenarioInfo);
-					setScenarioInfoFromLUA(scenarioInfo);
-				}
-			} catch(e) {
-				console.error(e);
-			}
-			
+      }
+      try {
+        const scenarioInfo = parseScenario(
+          path.join(sourceFolder, scenarioFile)
+        );
+        if (scenarioInfo) {
+          setScenarioLUA(scenarioInfo);
+          setScenarioInfoFromLUA(scenarioInfo);
+        }
+      } catch (e) {
+        console.error(e);
+      }
     });
-	};
+  };
 
-	const loadScenarioInfoRef = useRef(loadScenarioInfo);
-	loadScenarioInfoRef.current = loadScenarioInfo;
-	
-	useEffect(() =>  {
-		console.warn('FLOPEIE')
-		reset();
-		setTimeout(() => {
+  const loadScenarioInfoRef = useRef(loadScenarioInfo);
+  loadScenarioInfoRef.current = loadScenarioInfo;
 
-			loadScenarioInfoRef.current()
-		}, 100)
-	}, [reset, sourceFolder]);
+  useEffect(() => {
+    console.warn('FLOPEIE');
+    reset();
+    setTimeout(() => {
+      loadScenarioInfoRef.current();
+    }, 100);
+  }, [reset, sourceFolder]);
 
   return (
     <Box display="flex" flex="1" flexDirection="row">
@@ -521,7 +542,9 @@ const MapUpload: FunctionComponent<Props> = () => {
                   <Typography variant="body2">{imageName}</Typography>
                 ) : null}
               </div> */}
-              <Typography color="textPrimary" variant="caption">*required</Typography>
+              <Typography color="textPrimary" variant="caption">
+                *required
+              </Typography>
             </DialogContent>
           )}
           <DialogActions style={{ marginBottom: 8 }}>
