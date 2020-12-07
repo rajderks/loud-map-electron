@@ -1,6 +1,7 @@
 import fs from 'fs';
 import archiver from 'archiver';
 import walk from './walk';
+import path from 'path';
 
 const archiveDirectory = (source: string, dest: string) => new Promise<{ filePath: string}>((res) => {
 	try {
@@ -11,6 +12,7 @@ const archiveDirectory = (source: string, dest: string) => new Promise<{ filePat
 
 	const output = fs.createWriteStream(dest);
 	const archive = archiver('zip');
+	const dirName = path.normalize(source).split(path.sep).pop()!;
 
 	output.on('close', () => {
 		console.log(`Bytes written: ${archive.pointer()}`);
@@ -42,7 +44,8 @@ const archiveDirectory = (source: string, dest: string) => new Promise<{ filePat
 				continue;
 			}
 			const buffer = fs.createReadStream(file);
-			archive.append(buffer, { name: filePath});
+			console.warn(dirName, filePath);
+			archive.append(buffer, { name: path.join(dirName, filePath)});
 		}
 		
 		archive.finalize();

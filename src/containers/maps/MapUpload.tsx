@@ -169,7 +169,6 @@ const MapUpload: FunctionComponent<Props> = () => {
 		}
 
 		archiveDirectory(sourceFolder, tempPath).then((result) => {
-		
 			if (
 				!validate({
 					image: previewImage,
@@ -213,11 +212,10 @@ const MapUpload: FunctionComponent<Props> = () => {
 	
 			api
 				.post('maps', formData)
-				// .pipe(retry(0))
+				.pipe(retry(0))
 				.subscribe(
 					(n) => {
 						setSuccessToken(n.response.token);
-						// onAddedMap();
 					},
 					(e) => {
 						setUploading(false);
@@ -226,6 +224,11 @@ const MapUpload: FunctionComponent<Props> = () => {
 					},
 					() => {
 						setUploading(false);
+						try {
+							fs.unlinkSync(result.filePath);
+						} catch(e) {
+							console.log(e);
+						}
 					}
 				);
 		}).catch(e => {
