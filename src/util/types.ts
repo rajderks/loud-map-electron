@@ -23,9 +23,10 @@ export interface PatchNote {
 }
 
 export interface ScenarioLUA {
-  author: string;
+	author?: string;
   name: string;
   description: string;
   map_version: string;
-  size: number;
+	size: number;
+	players: number;
 }

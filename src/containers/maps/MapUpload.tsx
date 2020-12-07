@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useContext,
+	useRef,
 } from 'react';
 import {
   DialogActions,
@@ -32,6 +33,10 @@ import fs from 'fs';
 import path from 'path';
 import MapsContext from './MapsContext';
 import parseScenario from '../../util/parseScenario';
+import { ScenarioLUA } from '../../util/types';
+import { remote } from 'electron';
+import { archiveDirectory } from '../../util/archive';
+
 
 const useStyles = makeStyles((theme) => ({
   contentRoot: {
@@ -43,7 +48,8 @@ const useStyles = makeStyles((theme) => ({
   },
   sizeIcon: {
     position: 'absolute',
-    bottom: 6,
+		bottom: 6,
+		color: theme.palette.text.primary
   },
   sizeSelect: {
     marginLeft: 32,
@@ -61,7 +67,6 @@ const useStyles = makeStyles((theme) => ({
 interface Props {}
 
 const validate = ({
-  file,
   image,
   name,
   description,
@@ -73,8 +78,7 @@ const validate = ({
   author,
   version,
 }: {
-  file: File | null;
-  image: File | null;
+	image: string | null;
   name: string;
   description: string;
   players: string;
@@ -95,7 +99,6 @@ const validate = ({
   //   return false;
   // }
   return (
-    file &&
     image &&
     author?.length &&
     version?.length &&
@@ -106,26 +109,25 @@ const validate = ({
 };
 
 const MapUpload: FunctionComponent<Props> = () => {
-  const { sourceFolder } = useContext(MapsContext);
+  const { sourceFolder, previewImage } = useContext(MapsContext);
   const classes = useStyles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState('rd');
   const [version, setVersion] = useState('');
   const [players, setPlayers] = useState('');
   const [size, setSize] = useState(0);
   const [file, setFile] = useState<File | null>(null);
-  const [image, setImage] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [imageName, setImageName] = useState<string | null>(null);
+  const [, setFileName] = useState<string | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
-  const [adminToken, setAdminToken] = useState<string>('');
+  const [adminToken, setAdminToken] = useState<string>('$iio4nZM4v1!');
   const [uploading, setUploading] = useState(false);
   // const [officialMap, setOfficialMap] = useState(false);
   const [updateMap, setUpdateMap] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [disableAddButton, setDisableAddButton] = useState<boolean>(false);
-  const [successToken, setSuccessToken] = useState<string | null>(null);
+	const [successToken, setSuccessToken] = useState<string | null>(null);
+	const [, setScenarioLUA] = useState<ScenarioLUA | null>(null);
 
   const reset = useCallback(() => {
     setName('');
@@ -133,86 +135,109 @@ const MapUpload: FunctionComponent<Props> = () => {
     setPlayers('');
     setSize(0);
     setFile(null);
-    setImage(null);
     setFileName(null);
-    setImageName(null);
     setUploading(false);
     setError(null);
     setDisableAddButton(false);
     setMapToken('');
     // setOfficialMap(false);
     setUpdateMap(false);
-    setAdminToken('');
-    setAuthor('');
+    // setAdminToken('');
+    // setAuthor('');
     setVersion('');
     setSuccessToken(null);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		
     e.preventDefault();
-    setError(null);
-    const formData = new FormData();
+		setError(null);
+		
+		if(!sourceFolder) {
+			return;
+		}
 
-    if (
-      !validate({
-        file,
-        image,
-        name,
-        players,
-        description,
-        adminToken,
-        mapToken,
-        updateMap,
-        // officialMap,
-        author,
-        version,
-      })
-    ) {
-      return;
-    }
+		const formData = new FormData();
+		const zipName =  `${name}-${version}.scd`;
+		const tempPath = path.join(remote.app.getPath("temp"), 'LOUD-MAP', zipName);
 
-    setUploading(true);
+		try {
+			fs.mkdirSync(path.dirname(tempPath));
+			fs.unlinkSync(tempPath);
+		} catch(e) {
+			console.log(e);
+		}
 
-    formData.append('author', author);
-    formData.append('file', file!);
-    formData.append('image', image!);
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('players', players);
-    formData.append('version', version);
-    formData.append('size', String(size));
-    // if (officialMap) {
-    formData.append('official', 'true');
-    formData.append('adminToken', adminToken);
-    // }
-    if (updateMap) {
-      formData.append('mapToken', mapToken);
-    }
+		archiveDirectory(sourceFolder, tempPath).then((result) => {
+		
+			if (
+				!validate({
+					image: previewImage,
+					name,
+					players,
+					description,
+					adminToken,
+					mapToken,
+					updateMap,
+					// officialMap,
+					author,
+					version,
+				})
+			) {
+				return;
+			}
 
-    api
-      .post('maps', formData)
-      .pipe(retry(0))
-      .subscribe(
-        (n) => {
-          setSuccessToken(n.response.token);
-          // onAddedMap();
-        },
-        (e) => {
-          setUploading(false);
-          setError((e.response as ApiError)?.message ?? 'unkown error');
-          logEntry((e.response as ApiError)?.message, 'error', ['log']);
-        },
-        () => {
-          setUploading(false);
-        }
-      );
+			setUploading(true);
+
+			const fileBuffer = Buffer.from(fs.readFileSync(result.filePath));
+			const fileFile:File = new File([fileBuffer], path.basename(result.filePath), { type: 'application/scd'});
+
+			const previewBuffer = Buffer.from(fs.readFileSync(previewImage!));
+			const previewFile:File = new File([previewBuffer], path.basename(previewImage!), { type: 'image/jpg'});
+
+			formData.append('author', author);
+			formData.append('file', fileFile);
+			formData.append('image', previewFile);
+			formData.append('name', name);
+			formData.append('description', description);
+			formData.append('players', players);
+			formData.append('version', version);
+			formData.append('size', String(size));
+			// if (officialMap) {
+			formData.append('official', 'true');
+			formData.append('adminToken', adminToken);
+			// }
+			if (updateMap) {
+				formData.append('mapToken', mapToken);
+			}
+	
+			api
+				.post('maps', formData)
+				// .pipe(retry(0))
+				.subscribe(
+					(n) => {
+						setSuccessToken(n.response.token);
+						// onAddedMap();
+					},
+					(e) => {
+						setUploading(false);
+						setError((e.response as ApiError)?.message ?? 'unkown error');
+						logEntry((e.response as ApiError)?.message, 'error', ['log']);
+					},
+					() => {
+						setUploading(false);
+					}
+				);
+		}).catch(e => {
+			console.error(e);
+		});
+		
   };
 
   useEffect(() => {
     setDisableAddButton(
       !validate({
-        file,
-        image,
+        image: previewImage,
         name,
         players,
         description,
@@ -224,21 +249,27 @@ const MapUpload: FunctionComponent<Props> = () => {
         version,
       })
     );
-  }, [
-    adminToken,
-    author,
-    description,
-    file,
-    image,
-    mapToken,
-    name,
-    // officialMap,
-    players,
-    updateMap,
-    version,
-  ]);
+  }, [adminToken, author, description, file, mapToken, name, players, previewImage, updateMap, version]);
 
-  const floep = useCallback(() => {
+	const setScenarioInfoFromLUA = (info: ScenarioLUA) => {
+		if(info.description && !description?.length) {
+			setDescription(info.description);
+		}
+		if(info.map_version && !version?.length) {
+			setVersion(info.map_version);
+		}
+		if(info.name && !name?.length) {
+			setName(info.name);
+		}
+		if(info.size && size === 0) {
+			setSize(info.size);
+		}
+		if(info.players && !players?.length) {
+			setPlayers(String(info.players));
+		}
+	}
+
+  const loadScenarioInfo = () => {
     if (!sourceFolder) {
       return;
     }
@@ -253,10 +284,31 @@ const MapUpload: FunctionComponent<Props> = () => {
       if (!scenarioFile) {
         console.error('no scenario file found');
         return;
-      }
-      parseScenario(path.join(sourceFolder, scenarioFile));
+			}
+			try {
+				const scenarioInfo = parseScenario(path.join(sourceFolder, scenarioFile));
+				if(scenarioInfo) {
+					setScenarioLUA(scenarioInfo);
+					setScenarioInfoFromLUA(scenarioInfo);
+				}
+			} catch(e) {
+				console.error(e);
+			}
+			
     });
-  }, [sourceFolder]);
+	};
+
+	const loadScenarioInfoRef = useRef(loadScenarioInfo);
+	loadScenarioInfoRef.current = loadScenarioInfo;
+	
+	useEffect(() =>  {
+		console.warn('FLOPEIE')
+		reset();
+		setTimeout(() => {
+
+			loadScenarioInfoRef.current()
+		}, 100)
+	}, [reset, sourceFolder]);
 
   return (
     <Box display="flex" flex="1" flexDirection="row">
@@ -403,7 +455,7 @@ const MapUpload: FunctionComponent<Props> = () => {
                   }}
                 />
               ) : null}
-              <div>
+              {/* <div>
                 <Button
                   variant="contained"
                   component="label"
@@ -434,8 +486,8 @@ const MapUpload: FunctionComponent<Props> = () => {
                 {fileName ? (
                   <Typography variant="body2">{fileName}</Typography>
                 ) : null}
-              </div>
-              <div>
+              </div>*/}
+              {/* <div> 
                 <Button
                   variant="contained"
                   component="label"
@@ -465,8 +517,8 @@ const MapUpload: FunctionComponent<Props> = () => {
                 {imageName ? (
                   <Typography variant="body2">{imageName}</Typography>
                 ) : null}
-              </div>
-              <Typography variant="caption">*required</Typography>
+              </div> */}
+              <Typography color="textPrimary" variant="caption">*required</Typography>
             </DialogContent>
           )}
           <DialogActions style={{ marginBottom: 8 }}>
@@ -484,7 +536,7 @@ const MapUpload: FunctionComponent<Props> = () => {
                 <Button
                   disabled={uploading}
                   onClick={() => {
-                    floep();
+                    loadScenarioInfo();
                   }}
                 >
                   SCENARIO PARSE
@@ -503,7 +555,7 @@ const MapUpload: FunctionComponent<Props> = () => {
                     reset();
                   }}
                 >
-                  CANCEL
+                  RESET
                 </Button>
               </>
             )}
