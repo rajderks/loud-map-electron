@@ -112,14 +112,14 @@ const MapUpload: FunctionComponent<Props> = () => {
   const classes = useStyles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [author, setAuthor] = useState('rd');
+  const [author, setAuthor] = useState('');
   const [version, setVersion] = useState('');
   const [players, setPlayers] = useState('');
   const [size, setSize] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [, setFileName] = useState<string | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
-  const [adminToken, setAdminToken] = useState<string>('$iio4nZM4v1!');
+  const [adminToken, setAdminToken] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   // const [officialMap, setOfficialMap] = useState(false);
   const [updateMap, setUpdateMap] = useState(false);
@@ -327,7 +327,6 @@ const MapUpload: FunctionComponent<Props> = () => {
   loadScenarioInfoRef.current = loadScenarioInfo;
 
   useEffect(() => {
-    console.warn('FLOPEIE');
     reset();
     setTimeout(() => {
       loadScenarioInfoRef.current();
@@ -349,14 +348,17 @@ const MapUpload: FunctionComponent<Props> = () => {
                   style={{ alignSelf: 'flex-end' }}
                 />
                 <div style={{ marginLeft: 16 }}>
-                  <Typography variant="body1">
+                  <Typography variant="body1" color="textPrimary">
                     Below is your map token which you can use to update the map.
                   </Typography>
-                  <Typography color="secondary" variant="h6" align="center">
+                  <Typography variant="h6" align="center" color="textPrimary">
                     DO NOT LOSE THIS!
                   </Typography>
                   <div className={classes.tokenBox}>
-                    <Typography style={{ fontWeight: 'bold' }}>
+                    <Typography
+                      style={{ fontWeight: 'bold' }}
+                      color="textPrimary"
+                    >
                       {successToken}
                     </Typography>
                   </div>
@@ -479,69 +481,6 @@ const MapUpload: FunctionComponent<Props> = () => {
                   }}
                 />
               ) : null}
-              {/* <div>
-                <Button
-                  variant="contained"
-                  component="label"
-                  color="secondary"
-                  disabled={uploading}
-                >
-                  Select File (.scd)
-                  <input
-                    name="file"
-                    type="file"
-                    accept=".scd"
-                    style={{ display: 'none' }}
-                    disabled={uploading}
-                    onChange={(e) => {
-                      if (!e.target.files?.[0]) {
-                        setFile(null);
-                        setFileName(null);
-                        return;
-                      }
-                      setFile(e.target.files[0]!);
-                      const val = e.target.value;
-                      setFileName(
-                        val.split('\\').join('/').split('/').pop() ?? null
-                      );
-                    }}
-                  />
-                </Button>
-                {fileName ? (
-                  <Typography variant="body2">{fileName}</Typography>
-                ) : null}
-              </div>*/}
-              {/* <div> 
-                <Button
-                  variant="contained"
-                  component="label"
-                  color="secondary"
-                  disabled={uploading}
-                >
-                  Select Image
-                  <input
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      if (!e.target.files?.[0]) {
-                        setImage(null);
-                        setImageName(null);
-                        return;
-                      }
-                      setImage(e.target.files[0]!);
-                      const val = e.target.value;
-                      setImageName(
-                        val.split('\\').join('/').split('/').pop() ?? null
-                      );
-                    }}
-                  />
-                </Button>
-                {imageName ? (
-                  <Typography variant="body2">{imageName}</Typography>
-                ) : null}
-              </div> */}
               <Typography color="textPrimary" variant="caption">
                 *required
               </Typography>
@@ -573,7 +512,7 @@ const MapUpload: FunctionComponent<Props> = () => {
                   type="submit"
                   disabled={disableAddButton || uploading}
                 >
-                  ADD
+                  UPLOAD
                 </Button>
                 <Button
                   disabled={uploading}
