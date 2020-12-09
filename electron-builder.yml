@@ -1,5 +1,5 @@
 appId: com.theloudproject.map-client
-productName: LOUD_Map_THING
+productName: LOUD_Map_Uploader
 copyright: Copyright © 2020 Roy Derks
 files: ['./build/**/*', './public/electron.js']
 directories:

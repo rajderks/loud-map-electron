@@ -276,11 +276,9 @@ const MapUpload: FunctionComponent<Props> = () => {
   ]);
 
   const setScenarioInfoFromLUA = (info: ScenarioLUA) => {
+    setVersion(info.map_version);
     if (info.description && !description?.length) {
       setDescription(info.description);
-    }
-    if (info.map_version && !version?.length) {
-      setVersion(info.map_version);
     }
     if (info.name && !name?.length) {
       setName(info.name);
@@ -423,16 +421,21 @@ const MapUpload: FunctionComponent<Props> = () => {
                   <SizeIcon className={classes.sizeIcon} />
                 </FormControl>
                 <TextField
-                  disabled={uploading}
+                  disabled
                   label="Version*"
                   InputLabelProps={{ shrink: true }}
-                  placeholder="v1.0.0"
+                  placeholder="1"
                   value={version}
                   onChange={(e) => {
                     setVersion(e.target.value);
                   }}
                 />
               </div>
+              <Typography color="textPrimary" variant="caption">
+                (if version is absent, add map_version to scenario.lua and press
+                Scenario Parse button)
+              </Typography>
+              <br />
               {/* <FormControlLabel
                 label="Official map (admin only)"
                 control={
