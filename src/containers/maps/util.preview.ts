@@ -61,11 +61,13 @@ const commandMapPreview = async (
     );
   }
 
-	// debug code
-	// parseLUA(paths.save, path.join(dir, 'floep.json'));
-  const saveJSON = JSON.parse(
-    parseLUA(paths.save)!
-  );
+  const largest = width >= height ? width : height;
+
+  const offsets = determineOffsets(width, height);
+
+  // debug code
+  // parseLUA(paths.save, path.join(dir, 'floep.json'));
+  const saveJSON = JSON.parse(parseLUA(paths.save)!);
 
   const markers: Record<string, any> =
     saveJSON.MasterChain['_MASTERCHAIN_'].Markers;
@@ -106,37 +108,51 @@ const commandMapPreview = async (
   console.warn('buffa', imageBuffer);
   // @ts-ignore
   Jimp.read(imageBuffer.buffer).then((image: Jimp) => {
-    image.resize(
-      (IMAGE_SIZE / width) * width,
-      (IMAGE_SIZE / height) * height,
-      (error) => {
-        if (error) {
-          throw error;
-        }
-        markersFiltered.mass.forEach((m) => {
-          const coords = luaPositionToCoords(m.position, width, height);
-          composeImage(image, massJimp, coords);
-        });
-        markersFiltered.hydro.forEach((m) => {
-          const coords = luaPositionToCoords(m.position, width, height);
-          composeImage(image, hydroJimp, coords);
-        });
-        markersFiltered.army.forEach((m) => {
-          const coords = luaPositionToCoords(m.position, width, height);
-          composeImage(image, armyJimp, coords);
-        });
-        try {
-          fs.unlinkSync(path.join('./', dir, destination));
-        } catch (e) {
-          // console.error(e);
-        }
-        image.getBufferAsync(image.getMIME()).then((imageBuffer) => {
-          fs.writeFileSync(path.join(dir, destination), imageBuffer);
-          cb(path.join(dir, destination));
-        });
-        console.log('Jobs done!');
+    image.resize(IMAGE_SIZE, IMAGE_SIZE, (error) => {
+      if (error) {
+        throw error;
       }
-    );
+      markersFiltered.mass.forEach((m) => {
+        const coords = luaPositionToCoords(
+          m.position,
+          width,
+          height,
+          largest,
+          offsets
+        );
+        composeImage(image, massJimp, coords);
+      });
+      markersFiltered.hydro.forEach((m) => {
+        const coords = luaPositionToCoords(
+          m.position,
+          width,
+          height,
+          largest,
+          offsets
+        );
+        composeImage(image, hydroJimp, coords);
+      });
+      markersFiltered.army.forEach((m) => {
+        const coords = luaPositionToCoords(
+          m.position,
+          width,
+          height,
+          largest,
+          offsets
+        );
+        composeImage(image, armyJimp, coords);
+      });
+      try {
+        fs.unlinkSync(path.join('./', dir, destination));
+      } catch (e) {
+        // console.error(e);
+      }
+      image.getBufferAsync(image.getMIME()).then((imageBuffer) => {
+        fs.writeFileSync(path.join(dir, destination), imageBuffer);
+        cb(path.join(dir, destination));
+      });
+      console.log('Jobs done!');
+    });
   });
 
   console.warn(Object.values(markersFiltered).map((x) => x.length));
@@ -145,28 +161,41 @@ const commandMapPreview = async (
 const luaPositionToCoords = (
   position: string,
   width: number,
-  height: number
+  height: number,
+  largest: number,
+  offsets: { x: number; y: number }
 ) => {
   const coords = position.split(',');
+
   return {
-    x: Number.parseFloat(coords[0]),
-    y: Number.parseFloat(coords[2]),
-    xPerc: Number.parseFloat(coords[0]) / width,
-    yPerc: Number.parseFloat(coords[2]) / height,
+    x: (offsets.x + Number.parseFloat(coords[0]) / largest) * 1024,
+    y: (offsets.y + Number.parseFloat(coords[2]) / largest) * 1024,
   };
 };
 
 const composeImage = (
   src: Jimp,
   dest: Jimp,
-  coords: { x: number; y: number; xPerc: number; yPerc: number }
+  coords: { x: number; y: number }
 ) =>
   src.composite(
     dest,
-    coords.xPerc * IMAGE_SIZE - dest.getWidth() / 2,
-    coords.yPerc * IMAGE_SIZE - dest.getHeight() / 2
+    coords.x - dest.getWidth() / 2,
+    coords.y - dest.getHeight() / 2
   );
 
-export default commandMapPreview;
+const determineOffsets = (width: number, height: number) => {
+  let xOffset = 0;
+  let yOffset = 0;
 
-// (?=\['mass\s\d+).*\['position'\].*(VECTOR3\(.*\)),
+  if (width > height) {
+    const factor = height / width;
+    yOffset = 0.5 * factor;
+  } else if (width < height) {
+    const factor = width / height;
+    xOffset = 0.5 * factor;
+  }
+  return { x: xOffset, y: yOffset };
+};
+
+export default commandMapPreview;
