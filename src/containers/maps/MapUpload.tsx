@@ -19,6 +19,7 @@ import {
   Typography,
   Box,
   darken,
+  Dialog,
 } from '@material-ui/core';
 import MapsPlayersTextField from './MapsPlayersTextField';
 import MapsSizeSelect from './MapsSizeSelect';
@@ -229,8 +230,16 @@ const MapUpload: FunctionComponent<Props> = () => {
             },
             (e) => {
               setUploading(false);
-              setError((e.response as ApiError)?.message ?? 'unkown error');
-              logEntry((e.response as ApiError)?.message, 'error', ['log']);
+              setError(
+                JSON.stringify(
+                  (e.response as ApiError)?.message ?? 'unkown error'
+                )
+              );
+              logEntry(
+                JSON.stringify((e.response as ApiError)?.message),
+                'error',
+                ['log']
+              );
             },
             () => {
               setUploading(false);
@@ -337,106 +346,79 @@ const MapUpload: FunctionComponent<Props> = () => {
         <SelectSourceFolder />
         {/* <PageHeader title="LOUD Map Thingajgicm" hideControls /> */}
         <form action="" onSubmit={handleSubmit}>
-          {successToken ? (
-            <DialogContent classes={{ root: classes.contentRoot }}>
-              <div style={{ display: 'flex' }}>
-                <SuccessIcon
-                  color="secondary"
-                  fontSize="large"
-                  style={{ alignSelf: 'flex-end' }}
+          <DialogContent classes={{ root: classes.contentRoot }}>
+            <TextField
+              disabled={uploading}
+              label="Map name*"
+              InputLabelProps={{ shrink: true }}
+              placeholder="Enter the map name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+            />
+            <TextField
+              multiline
+              disabled={uploading}
+              label="Description*"
+              InputLabelProps={{ shrink: true }}
+              placeholder="Enter a short description"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
+            />
+            <TextField
+              multiline
+              disabled={uploading}
+              label="Author*"
+              InputLabelProps={{ shrink: true }}
+              placeholder="Enter your nickname"
+              value={author}
+              onChange={(e) => {
+                setAuthor(e.target.value);
+              }}
+            />
+            <MapsPlayersTextField
+              id="add-players-textfield"
+              label="Players*"
+              disabled={uploading}
+              onChange={setPlayers}
+              value={players}
+            />
+            <div style={{ display: 'flex' }}>
+              <FormControl>
+                <InputLabel shrink id="add-size-select">
+                  Size*
+                </InputLabel>
+                <MapsSizeSelect
+                  id="add-size-select"
+                  disabled={uploading}
+                  classes={{ select: classes.sizeSelect }}
+                  onChange={setSize}
+                  value={size}
+                  defaultValue={size}
+                  disableAll
                 />
-                <div style={{ marginLeft: 16 }}>
-                  <Typography variant="body1" color="textPrimary">
-                    Below is your map token which you can use to update the map.
-                  </Typography>
-                  <Typography variant="h6" align="center" color="textPrimary">
-                    DO NOT LOSE THIS!
-                  </Typography>
-                  <div className={classes.tokenBox}>
-                    <Typography
-                      style={{ fontWeight: 'bold' }}
-                      color="textPrimary"
-                    >
-                      {successToken}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          ) : (
-            <DialogContent classes={{ root: classes.contentRoot }}>
+                <SizeIcon className={classes.sizeIcon} />
+              </FormControl>
               <TextField
-                disabled={uploading}
-                label="Map name*"
+                disabled
+                label="Version*"
                 InputLabelProps={{ shrink: true }}
-                placeholder="Enter the map name"
-                value={name}
+                placeholder="1"
+                value={version}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setVersion(e.target.value);
                 }}
               />
-              <TextField
-                multiline
-                disabled={uploading}
-                label="Description*"
-                InputLabelProps={{ shrink: true }}
-                placeholder="Enter a short description"
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value);
-                }}
-              />
-              <TextField
-                multiline
-                disabled={uploading}
-                label="Author*"
-                InputLabelProps={{ shrink: true }}
-                placeholder="Enter your nickname"
-                value={author}
-                onChange={(e) => {
-                  setAuthor(e.target.value);
-                }}
-              />
-              <MapsPlayersTextField
-                id="add-players-textfield"
-                label="Players*"
-                disabled={uploading}
-                onChange={setPlayers}
-                value={players}
-              />
-              <div style={{ display: 'flex' }}>
-                <FormControl>
-                  <InputLabel shrink id="add-size-select">
-                    Size*
-                  </InputLabel>
-                  <MapsSizeSelect
-                    id="add-size-select"
-                    disabled={uploading}
-                    classes={{ select: classes.sizeSelect }}
-                    onChange={setSize}
-                    value={size}
-                    defaultValue={size}
-                    disableAll
-                  />
-                  <SizeIcon className={classes.sizeIcon} />
-                </FormControl>
-                <TextField
-                  disabled
-                  label="Version*"
-                  InputLabelProps={{ shrink: true }}
-                  placeholder="1"
-                  value={version}
-                  onChange={(e) => {
-                    setVersion(e.target.value);
-                  }}
-                />
-              </div>
-              <Typography color="textPrimary" variant="caption">
-                (if version is absent, add map_version to scenario.lua and press
-                Scenario Parse button)
-              </Typography>
-              <br />
-              {/* <FormControlLabel
+            </div>
+            <Typography color="textPrimary" variant="caption">
+              (if version is absent, add map_version to scenario.lua and press
+              Scenario Parse button)
+            </Typography>
+            <br />
+            {/* <FormControlLabel
                 label="Official map (admin only)"
                 control={
                   <Checkbox
@@ -449,46 +431,46 @@ const MapUpload: FunctionComponent<Props> = () => {
                 }
               />
               {officialMap ? ( */}
-              <TextField
-                disabled={uploading}
-                label="Admin token*"
-                InputLabelProps={{ shrink: true }}
-                placeholder="Enter admin token"
-                type="password"
-                value={adminToken}
-                onChange={(e) => {
-                  setAdminToken(e.target.value);
-                }}
-              />
-              {/* ) : null} */}
-              <FormControlLabel
-                label="Update map"
-                control={
-                  <Checkbox
-                    disabled={uploading}
-                    value={updateMap}
-                    onChange={(_e, checked) => {
-                      setUpdateMap(checked);
-                    }}
-                  />
-                }
-              />
-              {updateMap ? (
-                <TextField
-                  multiline
+            <TextField
+              disabled={uploading}
+              label="Admin token*"
+              InputLabelProps={{ shrink: true }}
+              placeholder="Enter admin token"
+              type="password"
+              value={adminToken}
+              onChange={(e) => {
+                setAdminToken(e.target.value);
+              }}
+            />
+            {/* ) : null} */}
+            <FormControlLabel
+              label="Update map"
+              control={
+                <Checkbox
                   disabled={uploading}
-                  placeholder="Enter map token"
-                  value={mapToken}
-                  onChange={(e) => {
-                    setMapToken(e.target.value);
+                  value={updateMap}
+                  onChange={(_e, checked) => {
+                    setUpdateMap(checked);
                   }}
                 />
-              ) : null}
-              <Typography color="textPrimary" variant="caption">
-                *required
-              </Typography>
-            </DialogContent>
-          )}
+              }
+            />
+            {updateMap ? (
+              <TextField
+                multiline
+                disabled={uploading}
+                placeholder="Enter map token"
+                value={mapToken}
+                onChange={(e) => {
+                  setMapToken(e.target.value);
+                }}
+              />
+            ) : null}
+            <Typography color="textPrimary" variant="caption">
+              *required
+            </Typography>
+          </DialogContent>
+
           <DialogActions style={{ marginBottom: 8 }}>
             {successToken ? (
               <Button
@@ -529,14 +511,49 @@ const MapUpload: FunctionComponent<Props> = () => {
             )}
           </DialogActions>
         </form>
+        <Dialog open={!!successToken?.length}>
+          <DialogContent classes={{ root: classes.contentRoot }}>
+            <div style={{ display: 'flex' }}>
+              <SuccessIcon
+                color="secondary"
+                fontSize="large"
+                style={{ alignSelf: 'flex-end' }}
+              />
+              <div style={{ marginLeft: 16 }}>
+                <Typography variant="body1" color="textPrimary">
+                  Below is your map token which you can use to update the map.
+                </Typography>
+                <Typography variant="h6" align="center" color="textPrimary">
+                  DO NOT LOSE THIS!
+                </Typography>
+                <div className={classes.tokenBox}>
+                  <Typography
+                    style={{ fontWeight: 'bold' }}
+                    color="textPrimary"
+                  >
+                    {successToken}
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setSuccessToken(null)}>Close</Button>
+          </DialogActions>
+        </Dialog>
         {!successToken ? (
-          <Box px={3} py={1} maxWidth={300}>
-            {error?.length ? (
-              <Typography color="error" variant="body2">
-                Error: {error}
-              </Typography>
-            ) : null}
-          </Box>
+          <Dialog
+            open={!successToken && !!(error?.length ?? false)}
+            onClose={() => setError(null)}
+          >
+            <DialogContent>
+              {error?.length ? (
+                <Typography color="error" variant="body2">
+                  Error: {error}
+                </Typography>
+              ) : null}
+            </DialogContent>
+          </Dialog>
         ) : null}
       </Box>
     </Box>
