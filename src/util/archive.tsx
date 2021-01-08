@@ -43,7 +43,9 @@ const archiveDirectory = (source: string, dest: string, preview: string) =>
         const filePath = file.replace(source, '');
 
         if (
-          !file.endsWith(preview) &&
+          !file.endsWith(
+            preview.length > 0 ? preview : 'this-is-a-dirty-fix.asdf'
+          ) &&
           (file.endsWith('.jpeg') ||
             file.endsWith('.jpg') ||
             file.endsWith('.png'))
