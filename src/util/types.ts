@@ -29,4 +29,5 @@ export interface ScenarioLUA {
   map_version: string;
   size?: number;
   players?: number;
+  preview: string;
 }

@@ -16,6 +16,7 @@ const parseScenario = (source: string): ScenarioLUA => {
   const players = /armies.*{([a-zA-Z0-9|\s|\w|\S]*?)}/gim
     .exec(scenarioInfo)?.[1]
     ?.split(',')?.length;
+  let preview = /preview\s*=\s*"?'?([^"']*,?)/gim.exec(scenarioInfo)?.[1] ?? '';
 
   // if (!author) {
   //   throw new Error(`author missing. ${author}`);
@@ -55,6 +56,7 @@ const parseScenario = (source: string): ScenarioLUA => {
     map_version,
     name,
     players,
+    preview,
     size: sizeValue,
   };
   console.warn(result);

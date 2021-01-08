@@ -127,7 +127,7 @@ const MapUpload: FunctionComponent<Props> = () => {
   const [error, setError] = useState<string | null>(null);
   const [disableAddButton, setDisableAddButton] = useState<boolean>(false);
   const [successToken, setSuccessToken] = useState<string | null>(null);
-  const [, setScenarioLUA] = useState<ScenarioLUA | null>(null);
+  const [scenarioLUA, setScenarioLUA] = useState<ScenarioLUA | null>(null);
 
   const reset = useCallback(() => {
     setName('');
@@ -170,7 +170,11 @@ const MapUpload: FunctionComponent<Props> = () => {
       console.log(e);
     }
 
-    archiveDirectory(sourceFolder, tempPath)
+    archiveDirectory(
+      sourceFolder,
+      tempPath,
+      path.basename(scenarioLUA?.preview ?? '')
+    )
       .then((result) => {
         if (
           !validate({
